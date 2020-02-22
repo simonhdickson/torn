@@ -1,0 +1,13 @@
+[package]
+name = "jack"
+version = "0.1.0"
+authors = ["Simon Dickson <simonhdickson@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+argh = "0.1"
+config = { version = "0.10", default-features = false, features = ["toml"] }
+heck = "0.3"
+serde = "1.0"
+serde_derive = "1.0"
+udev = "0.3"

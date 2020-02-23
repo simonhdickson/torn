@@ -1,6 +1,6 @@
 use std::process::Command;
 use std::{
-    io::{self, Write},
+    fs,
     path::{Path, PathBuf},
 };
 
@@ -10,7 +10,7 @@ use crate::disc::Disc;
 pub fn rip(config: &MakeMKV, disc: &Disc, raw: &Path) -> PathBuf {
     let target_folder = raw.join(disc.path_friendly_title());
 
-    std::fs::create_dir_all(&target_folder).unwrap();
+    fs::create_dir_all(&target_folder).unwrap();
 
     let mut child = Command::new("makemkvcon")
         .args(&[

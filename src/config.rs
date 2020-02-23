@@ -42,7 +42,10 @@ impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
         let mut s = Config::new();
 
-        s.merge(File::from_str(include_str!("../config/default.toml"), FileFormat::Toml))?;
+        s.merge(File::from_str(
+            include_str!("../config/default.toml"),
+            FileFormat::Toml,
+        ))?;
 
         s.merge(File::with_name("config").required(false))?;
 

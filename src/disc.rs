@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use std::process::Command;
 use std::{thread, time};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Disc {
     pub name: String,
     pub r#type: Option<DiscType>,
     pub properties: HashMap<String, String>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum DiscType {
     BluRay,
     Data,
@@ -48,15 +48,6 @@ impl Disc {
         }
 
         unimplemented!()
-    }
-
-    pub fn eject(self) {
-        Command::new("eject")
-            .arg(&self.name)
-            .output()
-            .expect("failed to execute process");
-
-        thread::sleep(time::Duration::from_secs(2));
     }
 }
 
@@ -103,4 +94,13 @@ fn get_device_type(properties: &HashMap<String, String>) -> Option<DiscType> {
     }
 
     None
+}
+
+pub fn eject(disc: &Disc) {
+    Command::new("eject")
+        .arg(&disc.name)
+        .output()
+        .expect("failed to execute process");
+
+    thread::sleep(time::Duration::from_secs(2));
 }

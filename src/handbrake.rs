@@ -1,16 +1,46 @@
 use std::{
     fs,
-    io::{self, Write},
+    path::{Path, PathBuf},
+    process::Command,
+    thread,
 };
-use std::{
-    path::Path,
-    process::{Command, Stdio},
-};
+
+use crossbeam_channel::{unbounded, Sender};
 
 use crate::config::Handbrake;
 use crate::disc::{Disc, DiscType};
 
-pub fn mkv(config: &Handbrake, src: &Path, dest: &Path, disc: &Disc) {
+pub struct MkvProcess {
+    tx: Sender<Job>,
+}
+
+struct Job {
+    src: PathBuf,
+    dest: PathBuf,
+    disc: Disc,
+}
+
+impl MkvProcess {
+    pub fn new(config: Handbrake) -> MkvProcess {
+        let (tx, rx) = unbounded();
+
+        let process = MkvProcess { tx };
+
+        thread::spawn(move || {
+            for job in rx {
+                mkv(&config, &job.src, &job.dest, &job.disc);
+            }
+        });
+
+        process
+    }
+
+    pub fn queue(&self, src: PathBuf, dest: PathBuf, disc: Disc) {
+        self.tx.send(Job { src, dest, disc }).unwrap();
+    }
+}
+
+fn mkv(config: &Handbrake, src: &Path, dest: &Path, disc: &Disc) {
     let args = match disc.r#type {
         Some(DiscType::DVD) => &config.dvd,
         Some(DiscType::BluRay) => &config.bluray,
@@ -24,7 +54,7 @@ pub fn mkv(config: &Handbrake, src: &Path, dest: &Path, disc: &Disc) {
             let mut output_file = path.clone();
             output_file.set_extension(&args.extension);
             let source_file = path.to_str().unwrap();
-            let dest_file = dest.join(output_file.file_name().unwrap().to_str().unwrap());
+            let dest_file = dest.join(output_file.file_name().unwrap());
             let dest_file = dest_file.to_str().unwrap();
 
             let mut child = Command::new("HandBrakeCLI")

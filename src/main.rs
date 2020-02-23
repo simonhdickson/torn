@@ -1,4 +1,4 @@
-use std::{path::Path, thread, time, fs};
+use std::{fs, path::Path, thread, time};
 
 use argh::FromArgs;
 
@@ -8,7 +8,6 @@ mod config;
 mod disc;
 mod handbrake;
 mod makemkv;
-mod util;
 
 fn main() {
     let args: Args = argh::from_env();
@@ -22,18 +21,14 @@ fn main() {
         Command::Debug(_) => {
             let disc = Disc::new(dev);
 
-            println!("name : {}", disc.name);
-            println!("type : {:?}", disc.r#type);
-
-            for (name, value) in disc.properties {
-                println!("property {} = {}", name, value);
-            }
+            println!("{:#?}", disc);
         }
     }
 }
 
 fn rip(dev: &str) {
     let settings = config::Settings::new().unwrap();
+    let mkv_process = handbrake::MkvProcess::new(settings.handbrake);
 
     let raw = Path::new(&settings.directory.raw);
     let dest = Path::new(&settings.directory.output);
@@ -45,8 +40,8 @@ fn rip(dev: &str) {
             match &disc.r#type {
                 Some(DiscType::DVD) => {
                     let ripped_path = makemkv::rip(&settings.makemkv, &disc, raw);
-                    handbrake::mkv(&settings.handbrake, &ripped_path, dest, &disc);
-                    disc.eject();
+                    mkv_process.queue(ripped_path, dest.into(), disc.clone());
+                    disc::eject(&disc);
                 }
                 Some(_) => unimplemented!(),
                 None => (),
@@ -77,6 +72,6 @@ enum Command {
 struct CommandRIP {}
 
 #[derive(FromArgs, PartialEq, Debug)]
-/// Second subcommand.
+/// prints debug information about disc.
 #[argh(subcommand, name = "debug")]
 struct CommandDebug {}

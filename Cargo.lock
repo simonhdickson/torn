@@ -93,19 +93,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jack"
-version = "0.1.0"
-dependencies = [
- "argh",
- "config",
- "crossbeam-channel",
- "heck",
- "serde",
- "serde_derive",
- "udev",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -264,6 +251,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ffc92d160b1eef40665be3a05630d003936a3bc7da7421277846c2613e92c71a"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "torn"
+version = "0.1.0"
+dependencies = [
+ "argh",
+ "config",
+ "crossbeam-channel",
+ "heck",
+ "serde",
+ "serde_derive",
+ "udev",
 ]
 
 [[package]]

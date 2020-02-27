@@ -26,7 +26,7 @@ impl Disc {
             r#type: get_device_type(&properties),
             properties,
         }
-    }
+    } 
 
     pub fn path_friendly_title(&self) -> String {
         use heck::ShoutySnakeCase;

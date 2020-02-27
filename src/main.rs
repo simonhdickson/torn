@@ -39,8 +39,10 @@ fn rip(dev: &str) {
         if !fs::File::open(dev).is_err() {
             match &disc.r#type {
                 Some(DiscType::DVD) => {
-                    let ripped_path = makemkv::rip(&settings.makemkv, &disc, raw);
-                    mkv_process.queue(ripped_path, dest.into(), disc.clone());
+                    let rip_target_folder = raw.join(disc.path_friendly_title());
+                    let mkv_target_folder = dest.join(disc.path_friendly_title());
+                    makemkv::rip(&settings.makemkv, &disc, &rip_target_folder);
+                    mkv_process.queue(rip_target_folder, mkv_target_folder, disc.clone());
                     disc::eject(&disc);
                 }
                 Some(_) => unimplemented!(),

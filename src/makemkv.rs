@@ -1,15 +1,13 @@
 use std::process::Command;
 use std::{
     fs,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use crate::config::MakeMKV;
 use crate::disc::Disc;
 
-pub fn rip(config: &MakeMKV, disc: &Disc, raw: &Path) -> PathBuf {
-    let target_folder = raw.join(disc.path_friendly_title());
-
+pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) {
     fs::create_dir_all(&target_folder).unwrap();
 
     let mut child = Command::new("makemkvcon")
@@ -26,6 +24,4 @@ pub fn rip(config: &MakeMKV, disc: &Disc, raw: &Path) -> PathBuf {
         .expect("failed to execute process");
 
     child.wait().unwrap();
-
-    target_folder
 }

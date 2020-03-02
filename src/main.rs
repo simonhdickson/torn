@@ -46,11 +46,11 @@ fn rip(dev: &str) {
                     disc::eject(&disc);
                 }
                 Some(_) => unimplemented!(),
-                None => (),
+                None => unimplemented!(),
             }
         }
 
-        thread::sleep(time::Duration::from_secs(60));
+        thread::sleep(settings.options.sleep_time);
     }
 }
 

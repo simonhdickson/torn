@@ -1,5 +1,12 @@
+use std::time::Duration;
 use config::{Config, ConfigError, File, FileFormat};
 use serde_derive::Deserialize;
+
+#[derive(Debug, Deserialize)]
+pub struct Options {
+    #[serde(with = "humantime_serde")]
+    pub sleep_time: Duration,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct Directory {
@@ -32,6 +39,7 @@ pub struct HandbrakeArgs {
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
+    pub options: Options,
     pub directory: Directory,
     pub makemkv: MakeMKV,
     pub handbrake: Handbrake,

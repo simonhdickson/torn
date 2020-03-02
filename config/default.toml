@@ -1,3 +1,6 @@
+[options]
+sleep_time = "60s"
+
 [directory]
 raw = "./raw"
 output = "./media"

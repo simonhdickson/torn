@@ -9,6 +9,7 @@ argh = "0.1"
 crossbeam-channel = "0.4"
 config = { version = "0.10", default-features = false, features = ["toml"] }
 heck = "0.3"
+humantime-serde = "1.0"
 serde = "1.0"
 serde_derive = "1.0"
 udev = "0.3"

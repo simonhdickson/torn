@@ -36,6 +36,8 @@ impl MkvProcess {
     }
 
     pub fn queue(&self, src: PathBuf, dest: PathBuf, disc: Disc) {
+        fs::create_dir_all(&dest).unwrap();
+
         self.tx.send(Job { src, dest, disc }).unwrap();
     }
 }

@@ -15,16 +15,16 @@ If you get errors related to not being able to find disc drive, you may need run
 Usage:
 
 ```
-cargo install --git https://github.com/simonhdickson/torn.git
+cargo install torn
 
 torn rip
 ```
 
 Loop is quite simple:
 
-1 .Insert a disc.
-2. Wait for eject.
-3. Go to step 1.
+    1 .Insert a disc
+    2. Wait for eject
+    3. Go to step 1
 
 By default will output into current working directory but can be configured by placing a `config.toml` file.
 See [config/default.toml](config/default.toml) for usage.

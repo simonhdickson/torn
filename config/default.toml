@@ -1,5 +1,5 @@
 [options]
-sleep_time = "15s"
+sleep_time = "60s"
 devices = ["/dev/sr0"]
 
 [directory]
@@ -11,7 +11,7 @@ args = []
 
 [handbrake.dvd]
 extension = "mp4"
-preset = "Very Fast 576p25"
+preset = "Fast 576p25"
 args = ["--subtitle", "scan", "-F"]
 
 [handbrake.bluray]

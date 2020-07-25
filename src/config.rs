@@ -12,7 +12,7 @@ pub struct Options {
 #[derive(Clone, Debug, Deserialize)]
 pub struct Directory {
     pub raw: String,
-    pub output: String
+    pub output: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]

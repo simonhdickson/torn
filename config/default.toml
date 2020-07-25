@@ -1,5 +1,6 @@
 [options]
-sleep_time = "60s"
+sleep_time = "15s"
+devices = ["/dev/sr0"]
 
 [directory]
 raw = "./raw"
@@ -9,14 +10,11 @@ output = "./media"
 args = []
 
 [handbrake.dvd]
-extension = "mkv"
-preset = "Fast 576p25"
+extension = "mp4"
+preset = "Very Fast 576p25"
 args = ["--subtitle", "scan", "-F"]
 
 [handbrake.bluray]
-extension = "mkv"
+extension = "mp4"
 preset = "Fast 1080p30"
 args = ["--subtitle", "scan", "-F", "--subtitle-burned", "--audio-lang-list", "eng", "--all-audio"]
-
-[omdb]
-key = ""

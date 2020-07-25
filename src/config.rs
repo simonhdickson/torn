@@ -1,49 +1,44 @@
-use std::time::Duration;
 use config::{Config, ConfigError, File, FileFormat};
 use serde_derive::Deserialize;
+use std::time::Duration;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Options {
     #[serde(with = "humantime_serde")]
     pub sleep_time: Duration,
+    pub devices: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Directory {
     pub raw: String,
-    pub output: String,
+    pub output: String
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct MakeMKV {
     pub args: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Handbrake {
     pub dvd: HandbrakeArgs,
     pub bluray: HandbrakeArgs,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct OMDB {
-    pub key: String,
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct HandbrakeArgs {
     pub extension: String,
     pub preset: String,
     pub args: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Settings {
     pub options: Options,
     pub directory: Directory,
     pub makemkv: MakeMKV,
     pub handbrake: Handbrake,
-    pub omdb: OMDB,
 }
 
 impl Settings {

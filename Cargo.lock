@@ -288,9 +288,9 @@ dependencies = [
 
 [[package]]
 name = "udev"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7807f741c01d283b6f6bdc63af0b2c0cb185672d693b14390b62b8cc0f4e2a41"
+checksum = "24953d50a3bce0f5f5a9a2766567072dc9af8096f8c40ea81815da651066bc9f"
 dependencies = [
  "libc",
  "libudev-sys",

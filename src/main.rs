@@ -1,4 +1,5 @@
-use std::{fs, path::Path, thread, time};
+use std::sync::Arc;
+use std::{fs, path::Path, thread};
 
 use argh::FromArgs;
 
@@ -12,45 +13,61 @@ mod makemkv;
 fn main() {
     let args: Args = argh::from_env();
 
-    let dev = "/dev/sr0";
-
     match args.command {
         Command::RIP(_) => {
-            rip(dev);
+            rip();
         }
         Command::Debug(_) => {
-            let disc = Disc::new(dev);
+            let settings = config::Settings::new().unwrap();
 
-            println!("{:#?}", disc);
+            for device in settings.options.devices {
+                let disc = Disc::new(&device);
+
+                println!("{:#?}", disc);
+            }
         }
     }
 }
 
-fn rip(dev: &str) {
+fn rip() {
     let settings = config::Settings::new().unwrap();
-    let mkv_process = handbrake::MkvProcess::new(settings.handbrake);
+    let mkv_process = Arc::new(handbrake::MkvProcess::new(settings.handbrake.clone()));
 
-    let raw = Path::new(&settings.directory.raw);
-    let dest = Path::new(&settings.directory.output);
+    let mut handles = Vec::with_capacity(settings.options.devices.len());
 
-    loop {
-        let disc = Disc::new(dev);
+    for device in settings.options.devices.clone() {
+        let settings = settings.clone();
+        let mkv_process = mkv_process.clone();
 
-        if !fs::File::open(dev).is_err() {
-            match &disc.r#type {
-                Some(DiscType::DVD) => {
-                    let rip_target_folder = raw.join(disc.path_friendly_title());
-                    let mkv_target_folder = dest.join(disc.path_friendly_title());
-                    makemkv::rip(&settings.makemkv, &disc, &rip_target_folder);
-                    mkv_process.queue(rip_target_folder, mkv_target_folder, disc.clone());
-                    disc::eject(&disc);
+        let handle = thread::spawn(move || loop {
+            let device = device.to_owned();
+            let raw = Path::new(&settings.directory.raw);
+            let dest = Path::new(&settings.directory.output);
+
+            let disc = Disc::new(&device);
+
+            if !fs::File::open(device).is_err() {
+                match &disc.r#type {
+                    Some(DiscType::DVD) => {
+                        let rip_target_folder = raw.join(disc.path_friendly_title());
+                        let mkv_target_folder = dest.join(disc.path_friendly_title());
+                        makemkv::rip(&settings.makemkv, &disc, &rip_target_folder);
+                        mkv_process.queue(rip_target_folder, mkv_target_folder, disc.clone());
+                        disc::eject(&disc);
+                    }
+                    Some(_) => unimplemented!(),
+                    None => (),
                 }
-                Some(_) => unimplemented!(),
-                None => unimplemented!(),
             }
-        }
 
-        thread::sleep(settings.options.sleep_time);
+            thread::sleep(settings.options.sleep_time);
+        });
+
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
     }
 }
 

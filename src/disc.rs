@@ -1,15 +1,16 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Command;
 use std::{thread, time};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Disc {
     pub name: String,
     pub r#type: Option<DiscType>,
     pub properties: HashMap<String, String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub enum DiscType {
     BluRay,
     Data,
@@ -26,7 +27,7 @@ impl Disc {
             r#type: get_device_type(&properties),
             properties,
         }
-    } 
+    }
 
     pub fn path_friendly_title(&self) -> String {
         use heck::ShoutySnakeCase;

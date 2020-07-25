@@ -78,4 +78,6 @@ fn mkv(config: &Handbrake, src: &Path, dest: &Path, disc: &Disc) {
             child.wait().unwrap();
         }
     }
+
+    fs::remove_dir_all(src).unwrap();
 }

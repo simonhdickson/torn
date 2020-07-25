@@ -3,6 +3,14 @@ name = "torn"
 version = "0.1.0"
 authors = ["Simon Dickson <simonhdickson@users.noreply.github.com>"]
 edition = "2018"
+description = """
+A minimalist DVD/Bru-ray ripper.
+"""
+documentation = "https://github.com/simonhdickson/torn"
+homepage = "https://github.com/simonhdickson/torn"
+repository = "https://github.com/simonhdickson/torn"
+readme = "readme.MD"
+license = "MIT"
 
 [dependencies]
 argh = "0.1"

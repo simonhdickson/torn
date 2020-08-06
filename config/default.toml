@@ -11,10 +11,10 @@ args = []
 
 [handbrake.dvd]
 extension = "mp4"
-preset = "Fast 576p25"
+preset = "Very Fast 576p25"
 args = ["--subtitle", "scan", "-F"]
 
 [handbrake.bluray]
 extension = "mp4"
-preset = "Fast 1080p30"
+preset = "Very Fast 1080p30"
 args = ["--subtitle", "scan", "-F", "--subtitle-burned", "--audio-lang-list", "eng", "--all-audio"]

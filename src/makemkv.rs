@@ -1,14 +1,14 @@
+use std::error::Error;
 use std::process::Command;
 use std::{fs, path::Path, time::SystemTime};
 
 use crate::config::MakeMKV;
 use crate::disc::Disc;
 
-pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) {
+pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<(), Box<dyn Error>> {
     let target_folder = if Path::new(target_folder).exists() {
         let timestamp = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
+            .duration_since(SystemTime::UNIX_EPOCH)?
             .as_secs();
 
         target_folder.with_file_name(format!(
@@ -20,7 +20,7 @@ pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) {
         target_folder.to_owned()
     };
 
-    fs::create_dir_all(&target_folder).unwrap();
+    fs::create_dir_all(&target_folder)?;
 
     let mut child = Command::new("makemkvcon")
         .args(&[
@@ -35,5 +35,7 @@ pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) {
         .spawn()
         .expect("failed to execute process");
 
-    child.wait().unwrap();
+    child.wait()?;
+
+    Ok(())
 }

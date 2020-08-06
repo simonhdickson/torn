@@ -1,25 +1,27 @@
 use std::sync::Arc;
-use std::{fs, path::Path, thread};
+use std::{error::Error, fs, path::Path, thread};
 
 use argh::FromArgs;
+use log::warn;
 
-use disc::{Disc, DiscType};
+use crate::config::Settings;
+use crate::disc::{Disc, DiscType};
 
 mod config;
 mod disc;
 mod handbrake;
 mod makemkv;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args: Args = argh::from_env();
+
+    let settings = config::Settings::new()?;
 
     match args.command {
         Command::RIP(_) => {
-            rip();
+            rip(settings)?;
         }
         Command::Debug(_) => {
-            let settings = config::Settings::new().unwrap();
-
             for device in settings.options.devices {
                 let disc = Disc::new(&device);
 
@@ -27,10 +29,11 @@ fn main() {
             }
         }
     }
+
+    Ok(())
 }
 
-fn rip() {
-    let settings = config::Settings::new().unwrap();
+fn rip(settings: Settings) -> Result<(), Box<dyn Error>> {
     let mkv_process = Arc::new(handbrake::MkvProcess::new(settings.handbrake.clone()));
 
     let mut handles = Vec::with_capacity(settings.options.devices.len());
@@ -48,14 +51,16 @@ fn rip() {
 
             if !fs::File::open(device).is_err() {
                 match &disc.r#type {
-                    Some(DiscType::DVD) => {
+                    Some(DiscType::DVD) | Some(DiscType::BluRay) => {
                         let rip_target_folder = raw.join(disc.path_friendly_title());
                         let mkv_target_folder = dest.join(disc.path_friendly_title());
-                        makemkv::rip(&settings.makemkv, &disc, &rip_target_folder);
+                        makemkv::rip(&settings.makemkv, &disc, &rip_target_folder).unwrap();
                         mkv_process.queue(rip_target_folder, mkv_target_folder, disc.clone());
                         disc::eject(&disc);
                     }
-                    Some(_) => unimplemented!(),
+                    Some(t) => {
+                        warn!("Disc type {:?} currently unsupported", t);
+                    }
                     None => (),
                 }
             }
@@ -69,6 +74,8 @@ fn rip() {
     for handle in handles {
         handle.join().unwrap();
     }
+
+    Ok(())
 }
 
 #[derive(FromArgs)]

@@ -79,5 +79,7 @@ fn mkv(config: &Handbrake, src: &Path, dest: &Path, disc: &Disc) {
         }
     }
 
-    fs::remove_dir_all(src).unwrap();
+    for entry in fs::read_dir(src).unwrap() {
+        fs::remove_file(entry.unwrap().path()).unwrap();
+    };
 }

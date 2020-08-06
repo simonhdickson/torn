@@ -22,7 +22,7 @@ torn rip
 
 Loop is quite simple:
 
-    1 .Insert a disc
+    1. Insert a disc
     2. Wait for eject
     3. Go to step 1
 

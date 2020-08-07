@@ -55,7 +55,7 @@ async fn mkv(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Error> {
     };
 
     let dest = dest.join(src.file_name().unwrap());
-    
+
     fs::create_dir_all(&dest).await?;
 
     let mut files = fs::read_dir(src).await?;

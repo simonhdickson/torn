@@ -1,7 +1,10 @@
+use std::{collections::HashMap, time::Duration};
+
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::process::Command;
-use std::{thread, time};
+use tokio::{
+    process::Command,
+    time::delay_for,
+};
 
 #[derive(Clone, Debug)]
 pub struct Disc {
@@ -102,11 +105,12 @@ fn get_device_type(properties: &HashMap<String, String>) -> Option<DiscType> {
     None
 }
 
-pub fn eject(disc: &Disc) {
+pub async fn eject(disc: &Disc) {
     Command::new("eject")
         .arg(&disc.name)
         .output()
+        .await
         .expect("failed to execute process");
 
-    thread::sleep(time::Duration::from_secs(2));
+    delay_for(Duration::from_secs(2)).await;
 }

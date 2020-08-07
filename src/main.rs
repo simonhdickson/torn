@@ -1,5 +1,4 @@
-use std::path::Path;
-use std::sync::Arc;
+use std::{path::Path, sync::Arc};
 
 use argh::FromArgs;
 use failure::Error;
@@ -79,15 +78,15 @@ async fn rip(settings: Settings) -> Result<(), Error> {
                             hb_process
                                 .queue(rip_target_folder, dest.to_path_buf())
                                 .await?;
-                            disc::eject(&disc);
+                            disc::eject(&disc).await;
                         }
                         Some(t) => {
                             warn!("Disc type {:?} currently unsupported", t);
-                            disc::eject(&disc);
+                            disc::eject(&disc).await;
                         }
                         None => {
                             warn!("Unkown disc type");
-                            disc::eject(&disc);
+                            disc::eject(&disc).await;
                         }
                     }
                 }

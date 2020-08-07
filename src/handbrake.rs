@@ -12,7 +12,6 @@ use crate::config::Handbrake;
 use crate::disc::{DiscMetadata, DiscType};
 
 pub struct HandbrakeProcess {
-    pub handle: JoinHandle<Result<(), Error>>,
     tx: UnboundedSender<Job>,
 }
 
@@ -23,7 +22,7 @@ struct Job {
 }
 
 impl HandbrakeProcess {
-    pub fn new(config: Handbrake) -> HandbrakeProcess {
+    pub fn new(config: Handbrake) -> (HandbrakeProcess, JoinHandle<Result<(), Error>>) {
         let (tx, mut rx) = unbounded_channel();
 
         let handle = tokio::spawn(async move {
@@ -36,12 +35,10 @@ impl HandbrakeProcess {
             Ok(())
         });
 
-        HandbrakeProcess { handle, tx }
+        (HandbrakeProcess { tx }, handle)
     }
 
     pub async fn queue(&self, src: PathBuf, dest: PathBuf) -> Result<(), Error> {
-        fs::create_dir_all(&dest).await?;
-
         self.tx.send(Job { src, dest })?;
 
         Ok(())
@@ -58,6 +55,8 @@ async fn mkv(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Error> {
     };
 
     let dest = dest.join(src.file_name().unwrap());
+    
+    fs::create_dir_all(&dest).await?;
 
     let mut files = fs::read_dir(src).await?;
 
@@ -65,7 +64,7 @@ async fn mkv(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Error> {
         if "toml" == entry.path().extension().unwrap().to_str().unwrap() {
             continue;
         }
-        
+
         let path = entry.path();
 
         if path.is_file() {

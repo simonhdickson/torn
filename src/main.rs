@@ -38,13 +38,14 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn rip(settings: Settings) -> Result<(), Error> {
-    let handbrake_process = Arc::new(handbrake::HandbrakeProcess::new(settings.handbrake.clone()));
+    let (hb_process, hb_handle) = handbrake::HandbrakeProcess::new(settings.handbrake.clone());
+    let hb_process = Arc::new(hb_process);
 
     let mut folders = fs::read_dir(&settings.directory.raw).await?;
 
     while let Ok(Some(entry)) = folders.next_entry().await {
         if entry.path().is_dir() && entry.path().join("meta.toml").is_file() {
-            handbrake_process
+            hb_process
                 .queue(
                     entry.path(),
                     Path::new(&settings.directory.output).to_path_buf(),
@@ -55,9 +56,11 @@ async fn rip(settings: Settings) -> Result<(), Error> {
 
     let mut handles = Vec::with_capacity(settings.options.devices.len() + 1);
 
+    handles.push(hb_handle);
+
     for device in settings.options.devices.clone() {
         let settings = settings.clone();
-        let handbrake_process = handbrake_process.clone();
+        let hb_process = hb_process.clone();
 
         let handle: JoinHandle<Result<(), Error>> = tokio::spawn(async move {
             loop {
@@ -73,7 +76,7 @@ async fn rip(settings: Settings) -> Result<(), Error> {
                             let rip_target_folder = raw.join(disc.path_friendly_title());
                             let rip_target_folder =
                                 makemkv::rip(&settings.makemkv, &disc, &rip_target_folder).await?;
-                            handbrake_process
+                            hb_process
                                 .queue(rip_target_folder, dest.to_path_buf())
                                 .await?;
                             disc::eject(&disc);

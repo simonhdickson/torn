@@ -14,11 +14,14 @@ license = "MIT"
 
 [dependencies]
 argh = "0.1"
-crossbeam-channel = "0.4"
 config = { version = "0.10", default-features = false, features = ["toml"] }
-log = "0.4"
+failure = "0.1"
+futures = "0.3"
 heck = "0.3"
 humantime-serde = "1.0"
+log = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
+tokio = { version = "0.2", features = ["full"] }
+toml = "0.5"
 udev = "0.4"

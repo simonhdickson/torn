@@ -1,8 +1,11 @@
+use std::path::Path;
 use std::sync::Arc;
-use std::{error::Error, fs, path::Path, thread};
 
 use argh::FromArgs;
+use failure::Error;
+use futures::future::try_join_all;
 use log::warn;
+use tokio::{fs, task::JoinHandle, time::delay_for};
 
 use crate::config::Settings;
 use crate::disc::{Disc, DiscType};
@@ -12,14 +15,15 @@ mod disc;
 mod handbrake;
 mod makemkv;
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Error> {
     let args: Args = argh::from_env();
 
     let settings = config::Settings::new()?;
 
     match args.command {
         Command::RIP(_) => {
-            rip(settings)?;
+            rip(settings).await?;
         }
         Command::Debug(_) => {
             for device in settings.options.devices {
@@ -33,46 +37,71 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn rip(settings: Settings) -> Result<(), Box<dyn Error>> {
-    let mkv_process = Arc::new(handbrake::MkvProcess::new(settings.handbrake.clone()));
+async fn rip(settings: Settings) -> Result<(), Error> {
+    let handbrake_process = Arc::new(handbrake::HandbrakeProcess::new(settings.handbrake.clone()));
 
-    let mut handles = Vec::with_capacity(settings.options.devices.len());
+    let mut folders = fs::read_dir(&settings.directory.raw).await?;
+
+    while let Ok(Some(entry)) = folders.next_entry().await {
+        if entry.path().is_dir() && entry.path().join("meta.toml").is_file() {
+            handbrake_process
+                .queue(
+                    entry.path(),
+                    Path::new(&settings.directory.output).to_path_buf(),
+                )
+                .await?;
+        }
+    }
+
+    let mut handles = Vec::with_capacity(settings.options.devices.len() + 1);
 
     for device in settings.options.devices.clone() {
         let settings = settings.clone();
-        let mkv_process = mkv_process.clone();
+        let handbrake_process = handbrake_process.clone();
 
-        let handle = thread::spawn(move || loop {
-            let device = device.to_owned();
-            let raw = Path::new(&settings.directory.raw);
-            let dest = Path::new(&settings.directory.output);
+        let handle: JoinHandle<Result<(), Error>> = tokio::spawn(async move {
+            loop {
+                let device = device.to_owned();
+                let raw = Path::new(&settings.directory.raw);
+                let dest = Path::new(&settings.directory.output);
 
-            let disc = Disc::new(&device);
+                let disc = Disc::new(&device);
 
-            if !fs::File::open(device).is_err() {
-                match &disc.r#type {
-                    Some(DiscType::DVD) | Some(DiscType::BluRay) => {
-                        let rip_target_folder = raw.join(disc.path_friendly_title());
-                        let mkv_target_folder = dest.join(disc.path_friendly_title());
-                        makemkv::rip(&settings.makemkv, &disc, &rip_target_folder).unwrap();
-                        mkv_process.queue(rip_target_folder, mkv_target_folder, disc.clone());
-                        disc::eject(&disc);
+                if !fs::File::open(device).await.is_err() {
+                    match &disc.r#type {
+                        Some(DiscType::DVD) | Some(DiscType::BluRay) => {
+                            let rip_target_folder = raw.join(disc.path_friendly_title());
+                            let rip_target_folder =
+                                makemkv::rip(&settings.makemkv, &disc, &rip_target_folder).await?;
+                            handbrake_process
+                                .queue(rip_target_folder, dest.to_path_buf())
+                                .await?;
+                            disc::eject(&disc);
+                        }
+                        Some(t) => {
+                            warn!("Disc type {:?} currently unsupported", t);
+                            disc::eject(&disc);
+                        }
+                        None => {
+                            warn!("Unkown disc type");
+                            disc::eject(&disc);
+                        }
                     }
-                    Some(t) => {
-                        warn!("Disc type {:?} currently unsupported", t);
-                    }
-                    None => (),
                 }
-            }
 
-            thread::sleep(settings.options.sleep_time);
+                delay_for(settings.options.sleep_time).await;
+            }
         });
 
         handles.push(handle);
     }
 
-    for handle in handles {
-        handle.join().unwrap();
+    let results = try_join_all(handles).await?;
+
+    for res in results {
+        if let Err(err) = res {
+            warn!("Error: {}", err);
+        }
     }
 
     Ok(())

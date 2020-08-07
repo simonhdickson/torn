@@ -11,6 +11,7 @@ pub struct Options {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Directory {
+    pub logs: String,
     pub raw: String,
     pub output: String,
 }

@@ -1,21 +1,26 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::process::Command;
 use std::{thread, time};
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug)]
 pub struct Disc {
     pub name: String,
     pub r#type: Option<DiscType>,
     pub properties: HashMap<String, String>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum DiscType {
     BluRay,
     Data,
     DVD,
     Music,
+}
+
+#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
+pub struct DiscMetadata {
+    pub disc_type: DiscType,
 }
 
 impl Disc {

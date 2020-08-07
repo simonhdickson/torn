@@ -1,11 +1,15 @@
-use std::error::Error;
-use std::process::Command;
-use std::{fs, path::Path, time::SystemTime};
+use std::{
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
+
+use failure::{format_err, Error};
+use tokio::{fs, process::Command};
 
 use crate::config::MakeMKV;
-use crate::disc::Disc;
+use crate::disc::{Disc, DiscMetadata};
 
-pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<(), Box<dyn Error>> {
+pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<PathBuf, Error> {
     let target_folder = if Path::new(target_folder).exists() {
         let timestamp = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
@@ -20,9 +24,9 @@ pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<(), Bo
         target_folder.to_owned()
     };
 
-    fs::create_dir_all(&target_folder)?;
+    fs::create_dir_all(&target_folder).await?;
 
-    let mut child = Command::new("makemkvcon")
+    let child = Command::new("makemkvcon")
         .args(&[
             "mkv",
             "-r",
@@ -35,7 +39,20 @@ pub fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<(), Bo
         .spawn()
         .expect("failed to execute process");
 
-    child.wait()?;
+    let status = child.await?;
 
-    Ok(())
+    if !status.success() {
+        return Err(format_err!(
+            "error code {:?} from handbrake, stopping process",
+            status.code()
+        ));
+    }
+
+    let toml = toml::to_string(&DiscMetadata {
+        disc_type: disc.r#type.unwrap(),
+    })?;
+
+    fs::write(target_folder.join("meta.toml"), toml).await?;
+
+    Ok(target_folder)
 }

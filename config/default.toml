@@ -3,6 +3,7 @@ sleep_time = "60s"
 devices = ["/dev/sr0"]
 
 [directory]
+logs = "./logs"
 raw = "./raw"
 output = "./media"
 

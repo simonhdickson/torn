@@ -1,5 +1,5 @@
 [options]
-sleep_time = "60s"
+sleep_time = "30s"
 devices = ["/dev/sr0"]
 
 [directory]
@@ -8,7 +8,11 @@ raw = "./raw"
 output = "./media"
 
 [makemkv]
+enqueue_existing_jobs = true
 args = []
+
+[handbrake]
+delete_on_complete = true
 
 [handbrake.dvd]
 extension = "mp4"

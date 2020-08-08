@@ -1,10 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use serde::{Deserialize, Serialize};
-use tokio::{
-    process::Command,
-    time::delay_for,
-};
+use tokio::{process::Command, time::delay_for};
 
 #[derive(Clone, Debug)]
 pub struct Disc {

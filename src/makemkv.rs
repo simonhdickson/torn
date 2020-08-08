@@ -10,7 +10,7 @@ use crate::config::MakeMKV;
 use crate::disc::{Disc, DiscMetadata};
 
 pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<PathBuf, Error> {
-    let target_folder = if Path::new(target_folder).exists() {
+    let target_folder = {
         let timestamp = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
             .as_secs();
@@ -20,8 +20,6 @@ pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<
             target_folder.file_name().unwrap().to_str().unwrap(),
             timestamp,
         ))
-    } else {
-        target_folder.to_owned()
     };
 
     fs::create_dir_all(&target_folder).await?;

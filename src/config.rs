@@ -18,11 +18,13 @@ pub struct Directory {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct MakeMKV {
+    pub enqueue_existing_jobs: bool,
     pub args: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Handbrake {
+    pub delete_on_complete: bool,
     pub dvd: HandbrakeArgs,
     pub bluray: HandbrakeArgs,
 }

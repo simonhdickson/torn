@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use failure::{format_err, Error};
+use log::info;
 use tokio::{
     fs,
     process::Command,
@@ -11,6 +12,7 @@ use tokio::{
 use crate::config::Handbrake;
 use crate::disc::{DiscMetadata, DiscType};
 
+#[derive(Clone)]
 pub struct HandbrakeProcess {
     tx: UnboundedSender<Job>,
 }
@@ -26,11 +28,13 @@ impl HandbrakeProcess {
         let (tx, mut rx) = unbounded_channel();
 
         let handle = tokio::spawn(async move {
-            for job in rx.recv().await {
+            while let Some(job) = rx.recv().await {
                 let job: Job = job;
 
-                mkv(&config, &job.src, &job.dest).await?;
+                handbrake(&config, &job.src, &job.dest).await?;
             }
+
+            info!("exiting handbrake process");
 
             Ok(())
         });
@@ -45,7 +49,7 @@ impl HandbrakeProcess {
     }
 }
 
-async fn mkv(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Error> {
+async fn handbrake(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Error> {
     let disc_meta: DiscMetadata = toml::from_slice(&fs::read(src.join("meta.toml")).await?)?;
 
     let args = match disc_meta.disc_type {
@@ -111,10 +115,14 @@ async fn mkv(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Error> {
         }
     }
 
+    info!("finished handbake processing into directory {}", dest.to_str().unwrap());
+
     let mut files = fs::read_dir(src).await?;
 
-    while let Ok(Some(entry)) = files.next_entry().await {
-        fs::remove_file(entry.path()).await?;
+    if config.delete_on_complete {
+        while let Ok(Some(entry)) = files.next_entry().await {
+            fs::remove_file(entry.path()).await?;
+        }
     }
 
     Ok(())

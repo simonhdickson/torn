@@ -15,11 +15,11 @@ args = []
 delete_on_complete = true
 
 [handbrake.dvd]
-extension = "mp4"
-preset = "Very Fast 576p25"
+extension = "mkv"
+preset = "H.264 MKV 576p25"
 args = ["--subtitle", "scan", "-F"]
 
 [handbrake.bluray]
-extension = "mp4"
-preset = "Very Fast 1080p30"
+extension = "mkv"
+preset = "H.264 MKV 1080p30"
 args = ["--subtitle", "scan", "-F", "--subtitle-burned", "--audio-lang-list", "eng", "--all-audio"]

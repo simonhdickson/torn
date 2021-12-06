@@ -1,7 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use serde::{Deserialize, Serialize};
-use tokio::{process::Command, time::delay_for};
+use tokio::{process::Command, time::sleep};
 
 #[derive(Clone, Debug)]
 pub struct Disc {
@@ -14,7 +14,7 @@ pub struct Disc {
 pub enum DiscType {
     BluRay,
     Data,
-    DVD,
+    Dvd,
     Music,
 }
 
@@ -58,7 +58,7 @@ impl Disc {
 }
 
 fn get_device_proprties(device: &str) -> HashMap<String, String> {
-    let sys_name = device.split("/").nth(2).unwrap();
+    let sys_name = device.split('/').nth(2).unwrap();
 
     let mut enumerator = udev::Enumerator::new().unwrap();
 
@@ -87,15 +87,15 @@ fn get_device_type(properties: &HashMap<String, String>) -> Option<DiscType> {
         }
     }
 
-    if let Some(_) = properties.get("ID_CDROM_MEDIA_BD") {
+    if properties.get("ID_CDROM_MEDIA_BD").is_some() {
         return Some(DiscType::BluRay);
     }
 
-    if let Some(_) = properties.get("ID_CDROM_MEDIA_DVD") {
-        return Some(DiscType::DVD);
+    if properties.get("ID_CDROM_MEDIA_DVD").is_some() {
+        return Some(DiscType::Dvd);
     }
 
-    if let Some(_) = properties.get("ID_CDROM_MEDIA_TRACK_COUNT_AUDIO") {
+    if properties.get("ID_CDROM_MEDIA_TRACK_COUNT_AUDIO").is_some() {
         return Some(DiscType::Music);
     }
 
@@ -109,5 +109,5 @@ pub async fn eject(disc: &Disc) {
         .await
         .expect("failed to execute process");
 
-    delay_for(Duration::from_secs(2)).await;
+    sleep(Duration::from_secs(2)).await;
 }

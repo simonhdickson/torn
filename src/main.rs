@@ -4,7 +4,8 @@ use argh::FromArgs;
 use failure::Error;
 use futures::future::try_join_all;
 use log::{error, info, warn};
-use tokio::{fs, task::JoinHandle, time::delay_for};
+use tokio::time::sleep;
+use tokio::{fs, task::JoinHandle};
 
 use crate::config::Settings;
 use crate::disc::{Disc, DiscType};
@@ -28,7 +29,7 @@ async fn main() -> Result<(), Error> {
     let settings = config::Settings::new()?;
 
     match args.command {
-        Command::RIP(_) => {
+        Command::Rip(_) => {
             rip(settings).await?;
         }
         Command::Debug(_) => {
@@ -88,10 +89,11 @@ fn spawn_rip_process(
             let dest = Path::new(&settings.directory.output);
             let disc = Disc::new(&device);
 
-            if !fs::File::open(device).await.is_err() {
+            if fs::File::open(device).await.is_ok() {
                 match &disc.r#type {
-                    Some(DiscType::DVD) | Some(DiscType::BluRay) => {
+                    Some(DiscType::Dvd) | Some(DiscType::BluRay) => {
                         let rip_target_folder = raw.join(disc.path_friendly_title());
+                        println!("{}", rip_target_folder.display());
                         let rip_target_folder =
                             makemkv::rip(&settings.makemkv, &disc, &rip_target_folder).await?;
                         hb_process
@@ -111,7 +113,7 @@ fn spawn_rip_process(
                 }
             }
 
-            delay_for(settings.options.sleep_time).await;
+            sleep(settings.options.sleep_time).await;
         }
     })
 }
@@ -121,6 +123,10 @@ async fn process_existing_directories(
     settings: &Settings,
 ) -> Result<(), Error> {
     if settings.makemkv.enqueue_existing_jobs {
+        if !Path::new(&settings.directory.raw).exists() {
+            return Ok(());
+        }
+
         let mut folders = fs::read_dir(&settings.directory.raw).await?;
 
         while let Ok(Some(entry)) = folders.next_entry().await {
@@ -148,7 +154,7 @@ struct Args {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand)]
 enum Command {
-    RIP(CommandRIP),
+    Rip(CommandRIP),
     Debug(CommandDebug),
 }
 

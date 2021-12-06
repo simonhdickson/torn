@@ -24,7 +24,7 @@ pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<
 
     fs::create_dir_all(&target_folder).await?;
 
-    let child = Command::new("makemkvcon")
+    let mut child = Command::new("makemkvcon")
         .args(&[
             "mkv",
             "-r",
@@ -37,7 +37,7 @@ pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<
         .spawn()
         .expect("failed to execute process");
 
-    let status = child.await?;
+    let status = child.wait().await?;
 
     if !status.success() {
         return Err(format_err!(

@@ -53,7 +53,7 @@ async fn handbrake(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Er
     let disc_meta: DiscMetadata = toml::from_slice(&fs::read(src.join("meta.toml")).await?)?;
 
     let args = match disc_meta.disc_type {
-        DiscType::DVD => &config.dvd,
+        DiscType::Dvd => &config.dvd,
         DiscType::BluRay => &config.bluray,
         _ => unimplemented!(),
     };
@@ -88,7 +88,7 @@ async fn handbrake(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Er
                 .to_str()
                 .ok_or_else(|| format_err!("path is not a valid string: {:?}", dest_file))?;
 
-            let child = Command::new("HandBrakeCLI")
+            let mut child = Command::new("HandBrakeCLI")
                 .args(&[
                     "-i",
                     source_file,
@@ -104,7 +104,7 @@ async fn handbrake(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Er
                 .spawn()
                 .expect("failed to execute process");
 
-            let status = child.await?;
+            let status = child.wait().await?;
 
             if !status.success() {
                 return Err(format_err!(
@@ -115,7 +115,10 @@ async fn handbrake(config: &Handbrake, src: &Path, dest: &Path) -> Result<(), Er
         }
     }
 
-    info!("finished handbake processing into directory {}", dest.to_str().unwrap());
+    info!(
+        "finished handbake processing into directory {}",
+        dest.to_str().unwrap()
+    );
 
     let mut files = fs::read_dir(src).await?;
 

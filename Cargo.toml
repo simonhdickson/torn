@@ -23,6 +23,6 @@ humantime-serde = "1.0"
 log = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
-tokio = { version = "1.14", features = ["full"] }
+tokio = { version = "1.19", features = ["full"] }
 toml = "0.5"
 udev = "0.6"

@@ -18,7 +18,7 @@ config = { version = "0.11", default-features = false, features = ["toml"] }
 pretty_env_logger = "0.4"
 failure = "0.1"
 futures = "0.3"
-heck = "0.3"
+heck = "0.5"
 humantime-serde = "1.0"
 log = "0.4"
 serde = "1.0"

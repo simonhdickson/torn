@@ -15,6 +15,7 @@ mod config;
 mod disc;
 mod handbrake;
 mod makemkv;
+mod web;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -55,9 +56,22 @@ async fn rip(settings: Settings) -> Result<(), Error> {
 
     process_existing_directories(&hb_process, &settings).await?;
 
-    let mut handles = Vec::with_capacity(settings.options.devices.len() + 1);
+    let mut handles = Vec::with_capacity(settings.options.devices.len() + 2);
 
     handles.push(hb_handle);
+
+    // Start web interface in background
+    let web_settings = settings.clone();
+    let web_hb_process = hb_process.clone();
+    let web_handle = tokio::spawn(async move {
+        if let Err(e) = web::run_web_server(web_settings, web_hb_process).await {
+            warn!("Web interface error: {}", e);
+        }
+        Ok(())
+    });
+    handles.push(web_handle);
+
+    info!("Web interface started at http://localhost:8080");
 
     for device in settings.options.devices.clone() {
         let settings = settings.clone();
@@ -163,7 +177,7 @@ enum Command {
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
-/// running ripping loop.
+/// Start the DVD/Blu-ray ripper with integrated web interface on http://localhost:8080
 #[argh(subcommand, name = "rip")]
 struct CommandRIP {}
 

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Torn - DVD/Blu-ray Ripper</title>
+        <link rel="stylesheet" href="/static/main.css" />
+    </head>
+    <body>
+        <div id="app">
+            <div class="container">
+                <header class="header">
+                    <h1>Torn DVD/Blu-ray Ripper</h1>
+                    <p>Monitor your disc drives and encoding jobs</p>
+                </header>
+
+                <div class="grid">
+                    <div class="card">
+                        <h2>Drive Status</h2>
+                        <div class="loading">Loading...</div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Handbrake Jobs</h2>
+                        <div class="loading">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            class TornApp {
+                constructor() {
+                    this.statusData = null;
+                    this.init();
+                }
+
+                async init() {
+                    this.startPolling();
+                }
+
+                async fetchStatus() {
+                    try {
+                        const response = await fetch("/api/status");
+                        this.statusData = await response.json();
+                        this.render();
+                    } catch (error) {
+                        console.error("Failed to fetch status:", error);
+                    }
+                }
+
+                async ejectDisc(device) {
+                    try {
+                        const deviceName = device.replace("/dev/", "");
+                        await fetch(`/api/eject/${deviceName}`, {
+                            method: "POST",
+                        });
+                        this.fetchStatus(); // Refresh status after ejection
+                    } catch (error) {
+                        console.error("Failed to eject disc:", error);
+                        alert("Failed to eject disc. Please try again.");
+                    }
+                }
+
+                startPolling() {
+                    setInterval(() => this.fetchStatus(), 2000);
+                    this.fetchStatus(); // Initial fetch
+                }
+
+                render() {
+                    const app = document.getElementById("app");
+                    app.innerHTML = `
+                    <div class="container">
+                        <header class="header">
+                            <h1>Torn DVD/Blu-ray Ripper</h1>
+                            <p>Monitor your disc drives and encoding jobs</p>
+                        </header>
+
+                        <div class="grid">
+                            <div class="card">
+                                <h2>Drive Status</h2>
+                                ${this.renderDriveList()}
+                            </div>
+
+                            <div class="card">
+                                <h2>Handbrake Jobs</h2>
+                                ${this.renderJobList()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                    // Add event listeners for eject buttons
+                    document.querySelectorAll(".eject-btn").forEach((btn) => {
+                        btn.addEventListener("click", (e) => {
+                            const device = e.target.dataset.device;
+                            this.ejectDisc(device);
+                        });
+                    });
+                }
+
+                renderDriveList() {
+                    if (!this.statusData) {
+                        return '<div class="loading">Loading...</div>';
+                    }
+
+                    return `
+                    <div class="drive-list">
+                        ${this.statusData.drives
+                            .map(
+                                (drive) => `
+                            <div class="drive-item">
+                                <div class="drive-header">
+                                    <span class="drive-name">${drive.device}</span>
+                                    <span class="status-badge ${drive.disc_present ? "present" : "empty"}">
+                                        ${drive.status}
+                                    </span>
+                                </div>
+                                ${
+                                    drive.disc_title
+                                        ? `
+                                    <div class="disc-info">
+                                        <span class="disc-title">${drive.disc_title}</span>
+                                        <span class="disc-type">
+                                            ${this.formatDiscType(drive.disc_type)}
+                                        </span>
+                                        <button class="eject-btn" data-device="${drive.device}">
+                                            Eject
+                                        </button>
+                                    </div>
+                                `
+                                        : ""
+                                }
+                            </div>
+                        `,
+                            )
+                            .join("")}
+                    </div>
+                `;
+                }
+
+                renderJobList() {
+                    if (!this.statusData) {
+                        return '<div class="loading">Loading...</div>';
+                    }
+
+                    if (this.statusData.handbrake_jobs.length === 0) {
+                        return `
+                        <div class="no-jobs">
+                            <p>No active encoding jobs</p>
+                            <p class="queue-info">Queue size: ${this.statusData.queue_size}</p>
+                        </div>
+                    `;
+                    }
+
+                    return `
+                    <div class="job-list">
+                        ${this.statusData.handbrake_jobs
+                            .map(
+                                (job) => `
+                            <div class="job-item">
+                                <div class="job-header">
+                                    <span class="job-source">${this.getJobFileName(job.source)}</span>
+                                    <span class="job-status ${this.getStatusClass(job.status)}">${job.status}</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${job.progress * 100}%"></div>
+                                    <div class="progress-text">${Math.round(job.progress * 100)}%</div>
+                                </div>
+                                <div class="job-details">
+                                    <span class="job-dest">→ ${this.getJobFileName(job.destination)}</span>
+                                    <span class="job-time">${job.started_at}</span>
+                                </div>
+                                <div class="job-id">ID: ${job.id.substring(0, 8)}</div>
+                            </div>
+                        `,
+                            )
+                            .join("")}
+                    </div>
+                `;
+                }
+
+                formatDiscType(discType) {
+                    if (!discType) return "Unknown";
+
+                    switch (discType) {
+                        case "BluRay":
+                            return "Blu-ray";
+                        case "Dvd":
+                            return "DVD";
+                        case "Data":
+                            return "Data";
+                        case "Music":
+                            return "Music";
+                        default:
+                            return discType;
+                    }
+                }
+
+                getJobFileName(path) {
+                    return path.split("/").pop() || path;
+                }
+
+                getStatusClass(status) {
+                    if (status === "Completed") return "status-completed";
+                    if (status === "Queued") return "status-queued";
+                    if (status.startsWith("Processing"))
+                        return "status-processing";
+                    if (status.startsWith("Failed")) return "status-failed";
+                    return "status-unknown";
+                }
+            }
+
+            // Initialize the app when DOM is loaded
+            document.addEventListener("DOMContentLoaded", () => {
+                new TornApp();
+            });
+        </script>
+    </body>
+</html>

@@ -2,7 +2,7 @@
 name = "torn"
 version = "0.2.0"
 authors = ["Simon Dickson <simonhdickson@users.noreply.github.com>"]
-edition = "2021"
+edition = "2024"
 description = """
 A minimalist DVD/Bru-ray ripper.
 """
@@ -14,15 +14,15 @@ license = "MIT"
 
 [dependencies]
 argh = "0.1"
-config = { version = "0.11", default-features = false, features = ["toml"] }
-pretty_env_logger = "0.4"
+config = { version = "0.15", default-features = false, features = ["toml"] }
+pretty_env_logger = "0.5"
 failure = "0.1"
 futures = "0.3"
-heck = "0.3"
-humantime-serde = "1.0"
+heck = "0.5"
+humantime-serde = "1.1"
 log = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
-tokio = { version = "1.14", features = ["full"] }
-toml = "0.5"
-udev = "0.6"
+tokio = { version = "1.46", features = ["full"] }
+toml = "0.9"
+udev = "0.9"

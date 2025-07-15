@@ -44,17 +44,23 @@ pub struct Settings {
     pub handbrake: Handbrake,
 }
 
+impl TryFrom<Config> for Settings {
+    type Error = ConfigError;
+
+    fn try_from(config: Config) -> Result<Self, Self::Error> {
+        config.try_deserialize()
+    }
+}
+
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
-        let mut s = Config::new();
-
-        s.merge(File::from_str(
-            include_str!("../config/default.toml"),
-            FileFormat::Toml,
-        ))?;
-
-        s.merge(File::with_name("config").required(false))?;
-
-        s.try_into()
+        Config::builder()
+            .add_source(File::from_str(
+                include_str!("../config/default.toml"),
+                FileFormat::Toml,
+            ))
+            .add_source(File::with_name("config").required(false))
+            .build()?
+            .try_into()
     }
 }

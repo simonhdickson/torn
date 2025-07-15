@@ -19,7 +19,11 @@ mod makemkv;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     if env::var_os("RUST_LOG").is_none() {
-        env::set_var("RUST_LOG", "torn=info");
+        // nothing else should be running right now
+        // so this is as safe as it can be for now
+        unsafe {
+            env::set_var("RUST_LOG", "torn=info");
+        }
     }
 
     pretty_env_logger::init();

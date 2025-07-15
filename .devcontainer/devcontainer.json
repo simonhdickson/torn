@@ -1,0 +1,8 @@
+{
+  "name": "Rust",
+  "service": "torn",
+  "remoteUser": "dev",
+  "dockerComposeFile": "../docker-compose.yml",
+  "workspaceFolder": "/torn",
+  "forwardPorts": [8080, "torn:8080"]
+}

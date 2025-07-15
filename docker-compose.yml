@@ -1,0 +1,9 @@
+services:
+  torn:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    user: 1000:1000
+    volumes:
+      - .:/torn:cached
+    command: sleep infinity

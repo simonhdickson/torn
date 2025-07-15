@@ -1,5 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
+use heck::{ToShoutySnekCase, ToTitleCase};
 use serde::{Deserialize, Serialize};
 use tokio::{process::Command, time::sleep};
 
@@ -35,14 +36,10 @@ impl Disc {
     }
 
     pub fn path_friendly_title(&self) -> String {
-        use heck::ShoutySnakeCase;
-
-        self.title().to_shouty_snake_case()
+        self.title().TO_SHOUTY_SNEK_CASE()
     }
 
     pub fn title(&self) -> String {
-        use heck::TitleCase;
-
         if let Some(val) = self.properties.get("ID_FS_LABEL") {
             if val != "iso9660" {
                 return val.to_title_case();

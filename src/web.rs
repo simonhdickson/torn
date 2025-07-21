@@ -52,7 +52,7 @@ pub struct AppState {
 pub async fn run_web_server(
     settings: Settings,
     handbrake_process: HandbrakeProcess,
-) -> Result<(), failure::Error> {
+) -> Result<(), anyhow::Error> {
     let system_status = Arc::new(RwLock::new(SystemStatus {
         drives: Vec::new(),
         handbrake_jobs: Vec::new(),
@@ -76,7 +76,7 @@ pub async fn run_web_server(
             info!("Web interface already running on {}", addr);
             return Ok(());
         }
-        return Err(failure::format_err!(
+        return Err(anyhow::anyhow!(
             "Failed to bind to address {}: {}",
             addr,
             e
@@ -92,7 +92,7 @@ pub async fn run_web_server(
 
     let listener = tokio::net::TcpListener::bind(&addr)
         .await
-        .map_err(|e| failure::format_err!("Failed to bind to address {}: {}", addr, e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to bind to address {}: {}", addr, e))?;
 
     info!("Web interface available at http://{}", addr);
 

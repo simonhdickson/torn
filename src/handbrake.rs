@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use failure::{Error, format_err};
+use anyhow::{Result, anyhow};
 use log::info;
 use tokio::{
     fs,
@@ -39,7 +39,7 @@ struct Job {
 }
 
 impl HandbrakeProcess {
-    pub fn new(config: Handbrake) -> (HandbrakeProcess, JoinHandle<Result<(), Error>>) {
+    pub fn new(config: Handbrake) -> (HandbrakeProcess, JoinHandle<Result<()>>) {
         let (tx, mut rx) = unbounded_channel();
         let jobs = Arc::new(RwLock::new(HashMap::<String, JobStatus>::new()));
         let jobs_clone = jobs.clone();
@@ -85,7 +85,7 @@ impl HandbrakeProcess {
         (HandbrakeProcess { tx, jobs }, handle)
     }
 
-    pub async fn queue(&self, src: PathBuf, dest: PathBuf) -> Result<(), Error> {
+    pub async fn queue(&self, src: PathBuf, dest: PathBuf) -> Result<()> {
         let job_id = format!("{}", uuid::Uuid::new_v4());
         let job_status = JobStatus {
             id: job_id.clone(),
@@ -137,7 +137,7 @@ async fn handbrake(
     dest: &Path,
     job_id: &str,
     jobs: &Arc<RwLock<HashMap<String, JobStatus>>>,
-) -> Result<(), Error> {
+) -> Result<()> {
     let disc_meta: DiscMetadata = toml::from_slice(&fs::read(src.join("meta.toml")).await?)?;
 
     let args = match disc_meta.disc_type {
@@ -165,16 +165,16 @@ async fn handbrake(
 
             let source_file = path
                 .to_str()
-                .ok_or_else(|| format_err!("path is not a valid string: {:?}", path))?;
+                .ok_or_else(|| anyhow!("path is not a valid string: {:?}", path))?;
 
             let dest_file = dest.join(
                 output_file
                     .file_name()
-                    .ok_or_else(|| format_err!("path is not a valid string: {:?}", dest))?,
+                    .ok_or_else(|| anyhow!("path is not a valid string: {:?}", dest))?,
             );
             let dest_file = dest_file
                 .to_str()
-                .ok_or_else(|| format_err!("path is not a valid string: {:?}", dest_file))?;
+                .ok_or_else(|| anyhow!("path is not a valid string: {:?}", dest_file))?;
 
             // Update progress to indicate file processing started
             {
@@ -204,7 +204,7 @@ async fn handbrake(
             let status = child.wait().await?;
 
             if !status.success() {
-                return Err(format_err!(
+                return Err(anyhow!(
                     "error code {:?} from handbrake, stopping process",
                     status.code()
                 ));

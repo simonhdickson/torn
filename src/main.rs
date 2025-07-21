@@ -1,7 +1,7 @@
 use std::{env, path::Path};
 
 use argh::FromArgs;
-use failure::Error;
+use anyhow::Result;
 use futures::future::try_join_all;
 use log::{error, info, warn};
 use tokio::time::sleep;
@@ -18,7 +18,7 @@ mod makemkv;
 mod web;
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<()> {
     if env::var_os("RUST_LOG").is_none() {
         // nothing else should be running right now
         // so this is as safe as it can be for now
@@ -51,7 +51,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-async fn rip(settings: Settings) -> Result<(), Error> {
+async fn rip(settings: Settings) -> Result<()> {
     let (hb_process, hb_handle) = HandbrakeProcess::new(settings.handbrake.clone());
 
     process_existing_directories(&hb_process, &settings).await?;
@@ -99,7 +99,7 @@ fn spawn_rip_process(
     device: String,
     settings: Settings,
     hb_process: HandbrakeProcess,
-) -> JoinHandle<Result<(), Error>> {
+) -> JoinHandle<Result<()>> {
     tokio::spawn(async move {
         loop {
             let device = device.to_owned();
@@ -139,7 +139,7 @@ fn spawn_rip_process(
 async fn process_existing_directories(
     hb_process: &HandbrakeProcess,
     settings: &Settings,
-) -> Result<(), Error> {
+) -> Result<()> {
     if settings.makemkv.enqueue_existing_jobs {
         if !Path::new(&settings.directory.raw).exists() {
             return Ok(());

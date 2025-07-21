@@ -30,9 +30,19 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     libudev1 \
     libssl3 \
+    wget \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install HandBrake and MakeMKV from PPAs
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:stebbins/handbrake-releases \
+    && add-apt-repository ppa:heyarje/makemkv-beta \
+    && apt-get update && apt-get install -y \
+    handbrake-cli \
     makemkv-bin \
     makemkv-oss \
-    handbrake-cli \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

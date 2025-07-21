@@ -3,7 +3,7 @@ use std::{
     time::SystemTime,
 };
 
-use failure::{format_err, Error};
+use failure::{Error, format_err};
 use tokio::{fs, process::Command};
 
 use crate::config::MakeMKV;
@@ -25,7 +25,7 @@ pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<
     fs::create_dir_all(&target_folder).await?;
 
     let mut child = Command::new("makemkvcon")
-        .args(&[
+        .args([
             "mkv",
             "-r",
             &format!("dev:{}", disc.name),

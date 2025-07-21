@@ -70,7 +70,7 @@ impl HandbrakeProcess {
                         // Mark job as failed
                         let mut jobs_map = jobs_clone.write().await;
                         if let Some(job_status) = jobs_map.get_mut(&job.id) {
-                            job_status.status = format!("Failed: {}", e);
+                            job_status.status = format!("Failed: {e}");
                             job_status.progress = 0.0;
                         }
                     }
@@ -180,13 +180,13 @@ async fn handbrake(
             {
                 let mut jobs_map = jobs.write().await;
                 if let Some(job_status) = jobs_map.get_mut(job_id) {
-                    job_status.status = format!("Processing: {}", source_file);
+                    job_status.status = format!("Processing: {source_file}");
                     job_status.progress = 0.5; // Rough estimate
                 }
             }
 
             let mut child = Command::new("HandBrakeCLI")
-                .args(&[
+                .args([
                     "-i",
                     source_file,
                     "-o",

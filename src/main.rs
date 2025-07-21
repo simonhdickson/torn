@@ -38,12 +38,12 @@ async fn main() -> Result<(), Error> {
             rip(settings).await?;
         }
         Command::Debug(_) => {
-            println!("Settings: {:#?}", settings);
+            println!("Settings: {settings:#?}");
 
             for device in settings.options.devices {
                 let disc = Disc::new(&device);
 
-                println!("{:#?}", disc);
+                println!("{disc:#?}");
             }
         }
     }
@@ -65,7 +65,7 @@ async fn rip(settings: Settings) -> Result<(), Error> {
     let web_hb_process = hb_process.clone();
     let web_handle = tokio::spawn(async move {
         if let Err(e) = web::run_web_server(web_settings, web_hb_process).await {
-            warn!("Web interface error: {}", e);
+            warn!("Web interface error: {e}");
         }
         Ok(())
     });
@@ -86,7 +86,7 @@ async fn rip(settings: Settings) -> Result<(), Error> {
 
     for res in results {
         if let Err(err) = res {
-            error!("Error: {}", err);
+            error!("Error: {err}");
         }
     }
 
@@ -121,7 +121,7 @@ fn spawn_rip_process(
                         disc::eject(&disc).await;
                     }
                     Some(t) => {
-                        warn!("Disc type {:?} currently unsupported", t);
+                        warn!("Disc type {t:?} currently unsupported");
                         disc::eject(&disc).await;
                     }
                     None => {

@@ -73,7 +73,7 @@ pub async fn run_web_server(
     // Check if port is already in use
     if let Err(e) = tokio::net::TcpListener::bind(&addr).await {
         if e.kind() == std::io::ErrorKind::AddrInUse {
-            info!("Web interface already running on {}", addr);
+            info!("Web interface already running on {addr}");
             return Ok(());
         }
         return Err(failure::format_err!(
@@ -94,7 +94,7 @@ pub async fn run_web_server(
         .await
         .map_err(|e| failure::format_err!("Failed to bind to address {}: {}", addr, e))?;
 
-    info!("Web interface available at http://{}", addr);
+    info!("Web interface available at http://{addr}");
 
     // Run the server with graceful shutdown handling
     let server_result = axum::serve(listener, app).await;
@@ -104,7 +104,7 @@ pub async fn run_web_server(
     match server_result {
         Ok(_) => Ok(()),
         Err(e) => {
-            warn!("Web server stopped: {}", e);
+            warn!("Web server stopped: {e}");
             Ok(()) // Don't fail the entire rip process if web server stops
         }
     }
@@ -182,7 +182,7 @@ async fn eject_disc(
     axum::extract::Path(device): axum::extract::Path<String>,
     State(_app_state): State<AppState>,
 ) -> Json<serde_json::Value> {
-    let device_path = format!("/dev/{}", device);
+    let device_path = format!("/dev/{device}");
     let disc = Disc::new(&device_path);
     crate::disc::eject(&disc).await;
 

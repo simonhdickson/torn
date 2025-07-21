@@ -40,10 +40,10 @@ impl Disc {
     }
 
     pub fn title(&self) -> String {
-        if let Some(val) = self.properties.get("ID_FS_LABEL") {
-            if val != "iso9660" {
-                return val.to_title_case();
-            }
+        if let Some(val) = self.properties.get("ID_FS_LABEL")
+            && val != "iso9660"
+        {
+            return val.to_title_case();
         }
 
         if let Some(val) = self.properties.get("ID_FS_UUID") {
@@ -78,10 +78,10 @@ fn get_device_proprties(device: &str) -> HashMap<String, String> {
 }
 
 fn get_device_type(properties: &HashMap<String, String>) -> Option<DiscType> {
-    if let Some(val) = properties.get("ID_FS_LABEL") {
-        if val == "iso9660" {
-            return Some(DiscType::Data);
-        }
+    if let Some(val) = properties.get("ID_FS_LABEL")
+        && val == "iso9660"
+    {
+        return Some(DiscType::Data);
     }
 
     if properties.get("ID_CDROM_MEDIA_BD").is_some() {

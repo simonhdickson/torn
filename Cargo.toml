@@ -16,7 +16,7 @@ license = "MIT"
 argh = "0.1"
 config = { version = "0.15", default-features = false, features = ["toml"] }
 pretty_env_logger = "0.5"
-failure = "0.1"
+anyhow = "1.0"
 futures = "0.3"
 heck = "0.5"
 humantime-serde = "1.1"

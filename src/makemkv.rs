@@ -3,13 +3,13 @@ use std::{
     time::SystemTime,
 };
 
-use failure::{format_err, Error};
+use anyhow::{anyhow, Result};
 use tokio::{fs, process::Command};
 
 use crate::config::MakeMKV;
 use crate::disc::{Disc, DiscMetadata};
 
-pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<PathBuf, Error> {
+pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<PathBuf> {
     let target_folder = {
         let timestamp = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)?
@@ -40,8 +40,8 @@ pub async fn rip(config: &MakeMKV, disc: &Disc, target_folder: &Path) -> Result<
     let status = child.wait().await?;
 
     if !status.success() {
-        return Err(format_err!(
-            "error code {:?} from handbrake, stopping process",
+        return Err(anyhow!(
+            "error code {:?} from makemkv, stopping process",
             status.code()
         ));
     }
